@@ -1,0 +1,46 @@
+#!/bin/bash
+
+TARGET=""
+REPORTS='reports'
+CODECOVERAGE=$REPORTS/'coverage'
+
+printUsage() {
+    echo "Usage : execTest target"
+    exit 0
+}
+
+if [ "$#" -gt 0 ]; then
+    TARGET="${1}"
+else
+    printUsage
+fi
+
+if [ ! -f "bin/$TARGET" ]; then
+    echo "There is NO bin/$TARGET. Enter ./build to build"
+    exit 1
+fi
+
+if [ ! -d "$REPORTS" ]; then
+  echo "Create folder $REPORTS"
+  mkdir $REPORTS
+fi
+
+if [ ! -d "$CODECOVERAGE" ]; then
+  echo "Create folder $CODECOVERAGE"
+  mkdir $CODECOVERAGE
+fi
+
+ulimit -c unlimited
+./bin/${TARGET} --gtest_output="xml:./${CODECOVERAGE}/report.xml"
+
+if [ $? -ne 0 ]; then
+    echo "Exec ${TARGET} Failed"
+fi
+
+if [ -d "./CMakeFiles/${TARGET}.dir" ]; then
+    lcov --directory ./CMakeFiles/${TARGET}.dir --capture --output-file ./${CODECOVERAGE}/coverage.info -rc lcov_branch_coverage=1
+    lcov --remove ./${CODECOVERAGE}/coverage.info '/c++*' '/include*' '/utest*' -o ./${CODECOVERAGE}/coverage.info -rc lcov_branch_coverage=1
+    
+fi
+
+genhtml ./${CODECOVERAGE}/coverage.info --branch-coverage --output-directory ./${CODECOVERAGE}  --rc genhtml_branch_coverage=1

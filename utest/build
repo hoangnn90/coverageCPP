@@ -1,0 +1,35 @@
+#!/bin/bash
+
+CURDIR=`pwd`
+BINDIR='bin'
+REPORTS='reports'
+
+removeFolder() {
+    if [ -d "$1" ]; then
+        echo "Remove folder $1"
+        sudo rm -rf $1
+    fi
+}
+
+removeCMakeFiles() {
+    if [ -d 'CMakeFiles' ]; then
+        echo "Remove folder CMakeFiles"
+        rm -rf 'CMakeFiles'
+    fi
+
+    rm cmake_install.cmake
+    rm CMakeCache.txt
+    rm Makefile
+    rm install_manifest.txt
+}
+
+if [ "$1" = 'clean' ]; then
+    echo "Cleanup..."
+    removeCMakeFiles
+    removeFolder $BINDIR
+    removeFolder $REPORTS
+    exit 0
+fi
+
+cmake .
+make
